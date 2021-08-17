@@ -62,6 +62,11 @@ class Product(models.Model):
         self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
+    def get_final_price(self):
+        if self.discount_price:
+            return self.discount_price
+        return self.price
+
     def __str__(self):
         return self.name
 

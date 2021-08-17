@@ -191,3 +191,5 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_FORMS = {
     'signup': 'users.forms.CustomSignupForm',
 }
+
+LOGIN_REDIRECT_URL = 'shop:home'

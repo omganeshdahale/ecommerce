@@ -1,15 +1,13 @@
 from django.db import models
 from django.utils.text import slugify
 
-LABEL_COLOUR_CHOICES=(
+LABEL_COLOUR_CHOICES = (
     ('primary','primary'),
     ('secondary','secondary'),
     ('success','success'),
     ('danger','danger'),
     ('warning','warning'),
     ('info','info'),
-    ('light','light'),
-    ('dark','danger'),
 )
 
 class Category(models.Model):
@@ -56,7 +54,7 @@ class Product(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('created',)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)

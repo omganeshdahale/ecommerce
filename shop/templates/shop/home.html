@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}Shop{% endblock title %}
+{% block title %}Home{% endblock title %}
 
 {% block content %}
   <!--Carousel Wrapper-->
@@ -175,15 +175,15 @@
             </li>
             {% for category in categories %}
               <li class="nav-item">
-                <a class="nav-link" href="#">{{ category }}</a>
+                <a class="nav-link" href="{% url 'shop:product_list' %}?category={{ category }}">{{ category }}</a>
               </li>
             {% endfor %}
           </ul>
           <!-- Links -->
 
-          <form class="form-inline">
+          <form class="form-inline" action="{% url 'shop:product_list' %}">
             <div class="md-form my-0">
-              <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+              <input name="name__icontains" class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
             </div>
           </form>
         </div>
@@ -201,52 +201,15 @@
           {% for product in products %}
             <!--Grid column-->
             <div class="col-lg-3 col-md-6 mb-4">
-
-              <!--Card-->
-              <div class="card">
-
-                <!--Card image-->
-                <div class="view overlay">
-                  <img src="{% if product.images.first %}{{ product.images.first.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img-top product-thumb" alt="">
-                  <a>
-                    <div class="mask rgba-white-slight"></div>
-                  </a>
-                </div>
-                <!--Card image-->
-
-                <!--Card content-->
-                <div class="card-body text-center">
-                  <!--Category & Title-->
-                  <a href="" class="grey-text">
-                    <h5>{{ product.category }}</h5>
-                  </a>
-                  <h5>
-                    <strong>
-                      <a href="" class="dark-grey-text">
-                        {{ product }}
-                        {% if product.label_text %}
-                          <span class="badge badge-pill {{ product.label_colour }}-color">{{ product.label_text }}</span>
-                        {% endif %}
-                      </a>
-                    </strong>
-                  </h5>
-
-                  <h4 class="font-weight-bold blue-text">
-                    <strong>${{ product.get_final_price }}</strong>
-                  </h4>
-
-                </div>
-                <!--Card content-->
-
-              </div>
-              <!--Card-->
-
+              {% include 'shop/product_card.html' %}
             </div>
             <!--Grid column-->
           {% endfor %}
 
         </div>
         <!--Grid row-->
+
+        <a href="{% url 'shop:product_list' %}" class="btn btn-lg btn-primary">Browse more</a>
 
       </section>
       <!--Section: Products v.3-->      

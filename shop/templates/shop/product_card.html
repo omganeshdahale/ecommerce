@@ -1,0 +1,40 @@
+{% load static %}
+
+<!--Card-->
+<div class="card">
+
+  <!--Card image-->
+  <div class="view overlay">
+    <img src="{% if product.images.first %}{{ product.images.first.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="card-img-top" alt="">
+    <a>
+      <div class="mask rgba-white-slight"></div>
+    </a>
+  </div>
+  <!--Card image-->
+
+  <!--Card content-->
+  <div class="card-body text-center">
+    <!--Category & Title-->
+    <a href="" class="grey-text">
+      <h5>{{ product.category }}</h5>
+    </a>
+    <h5>
+      <strong>
+        <a href="" class="dark-grey-text">
+          {{ product }}
+          {% if product.label_text %}
+            <span class="badge badge-pill {{ product.label_colour }}-color">{{ product.label_text }}</span>
+          {% endif %}
+        </a>
+      </strong>
+    </h5>
+
+    <h4 class="font-weight-bold blue-text">
+      <strong>${{ product.get_final_price }}</strong>
+    </h4>
+
+  </div>
+  <!--Card content-->
+
+</div>
+<!--Card-->

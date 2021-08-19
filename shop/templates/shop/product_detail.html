@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}{{ product }}{% endblock title %}
+
+{% block content %}
+  <!--Main layout-->
+  <main>
+    <div class="container dark-grey-text mt-5">
+
+      <!--Grid row-->
+      <div class="row wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6 mb-4">
+
+          <img id="product-image" src="{% if product.images.first %}{{ product.images.first.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" class="img-fluid" alt="">
+
+          {% if product.images.all|length > 1 %}
+            <nav class="mt-3">
+              <ul class="pagination pg-blue m-0 js-image-pagination">
+                {% for img in product.images.all %}
+                  <li class="page-item {% if forloop.first %}active{% endif %}" data-src="{{ img.image.url }}">
+                    <a class="page-link" href="#">{{ forloop.counter }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </nav>
+          {% endif %}
+
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-md-6 mb-4">
+
+          {% if not product.available %}
+            <div class="alert alert-danger">Out of Stock</div>
+          {% endif %}
+
+          <!--Content-->
+          <div class="p-4">
+
+            <div>
+              <a href="{% url 'shop:product_list' %}?category={{ product.category.pk }}" class="text-muted">
+                <h5>{{ product.category }}<h5>
+              </a>
+            </div>
+
+            <h1 class="font-weight-bold mb-3">
+              {{ product }}
+              {% if product.label_text %}
+                <span class="badge {{ product.label_colour }}-color mr-1">{{ product.label_text }}</span> 
+              {% endif %}
+            </h1>
+
+            <h2>
+              {% if product.discount_price %}
+                <span class="mr-1">
+                  <del>${{ product.price }}</del>
+                </span>
+              {% endif %}
+              <span>${{ product.get_final_price }}</span>
+            </h2>
+
+            {% if product.available %}
+              <form class="d-flex justify-content-left mt-5">
+                <!-- Default input -->
+                <input type="number" value="1" aria-label="Search" class="form-control" style="width: 100px">
+                <button class="btn btn-primary btn-md my-0 p" type="submit">Add to cart
+                  <i class="fas fa-shopping-cart ml-1"></i>
+                </button>
+
+              </form>
+            {% endif %}
+
+          </div>
+          <!--Content-->
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+      <hr>
+
+      <!--Grid row-->
+      <div class="row d-flex justify-content-center wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6 text-center">
+
+          <h4 class="my-4 h4">Additional information</h4>
+
+          <p>{{ product.description|linebreaks }}</p>
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+    </div>
+  </main>
+  <!--Main layout-->
+{% endblock content %}

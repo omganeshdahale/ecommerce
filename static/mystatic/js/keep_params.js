@@ -3,7 +3,7 @@ $(document).ready(function(){
         const urlParams = new URLSearchParams(window.location.search);
         const aUrlParams = new URLSearchParams($(this).attr('href'));
 
-        for ([key, value] of aUrlParams){
+        for (const [key, value] of aUrlParams){
             urlParams.set(key, value);
         }
 

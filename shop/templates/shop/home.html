@@ -175,7 +175,7 @@
             </li>
             {% for category in categories %}
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'shop:product_list' %}?category={{ category }}">{{ category }}</a>
+                <a class="nav-link" href="{% url 'shop:product_list' %}?category={{ category.pk }}">{{ category }}</a>
               </li>
             {% endfor %}
           </ul>

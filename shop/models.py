@@ -54,7 +54,7 @@ class Product(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('created',)
+        ordering = ('-created',)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -76,3 +76,7 @@ class ProductImage(models.Model):
         on_delete=models.CASCADE
     )
     image = models.ImageField(upload_to='product_images/')
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created',)

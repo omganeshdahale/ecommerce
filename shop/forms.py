@@ -1,8 +1,17 @@
 from django import forms
 from .models import Category
 
+PRODUCT_FILTER_INITIAL = {
+    'sort_by': '-created',
+    'name__icontains': None,
+    'category': None,
+    'min_price': None,
+    'max_price': None,
+    'include_out_of_stock': None,
+}
+
 SORT_BY_CHOICES = (
-    ('created', 'Newest First'),
+    ('-created', 'Newest First'),
     ('price', 'Price low to high'),
     ('-price', 'Price high to low'),
 )
@@ -10,7 +19,6 @@ SORT_BY_CHOICES = (
 class ProductFilterForm(forms.Form):
     sort_by = forms.ChoiceField(
         choices=SORT_BY_CHOICES,
-        initial='created',
         required=False
     )
     name__icontains = forms.CharField(
@@ -20,7 +28,6 @@ class ProductFilterForm(forms.Form):
     )
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
-        to_field_name='name',
         empty_label='All',
         required=False,
     )
@@ -34,3 +41,4 @@ class ProductFilterForm(forms.Form):
         decimal_places=2,
         required=False
     )
+    include_out_of_stock = forms.BooleanField(required=False)

@@ -42,3 +42,12 @@ class ProductFilterForm(forms.Form):
         required=False
     )
     include_out_of_stock = forms.BooleanField(required=False)
+
+
+class AddToCartForm(forms.Form):
+    quantity = forms.IntegerField(
+        initial=1,
+        max_value=20,
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control add-to-cart-input'})
+    )

@@ -65,9 +65,11 @@
             </h2>
 
             {% if product.available %}
-              <form class="d-flex justify-content-left mt-5">
+              <form action="{% url 'shop:add_to_cart' product.pk %}" method="POST" class="d-flex justify-content-left mt-5">
                 <!-- Default input -->
-                <input type="number" value="1" aria-label="Search" class="form-control" style="width: 100px">
+                {# <input type="number" value="1" aria-label="Search" class="form-control" style="width: 100px"> #}
+                {% csrf_token %}
+                {{ form.quantity }}
                 <button class="btn btn-primary btn-md my-0 p" type="submit">Add to cart
                   <i class="fas fa-shopping-cart ml-1"></i>
                 </button>

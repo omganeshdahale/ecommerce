@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
-from .forms import ProductFilterForm, AddToCartForm, PRODUCT_FILTER_INITIAL
+from .forms import *
 from .models import Category, Product, Order, OrderItem
 from .utils import get_filtered_products
 
@@ -69,3 +69,39 @@ def add_to_cart(request, pk):
         messages.success(request, 'Added to cart.')
 
     return redirect('shop:product_detail', slug=product.slug)
+
+@login_required
+def cart(request):
+    forms = {}
+    try:
+        order = request.user.orders.get(placed=None)
+        for i in order.items.all():
+            forms[i.pk] = UpdateCartForm(instance=i)
+    except Order.DoesNotExist:
+        order = None
+
+    context = {
+        'order': order,
+        'forms': forms
+    }
+    return render(request, 'shop/cart.html', context)
+
+@require_POST
+@login_required
+def update_cart(request, pk):
+    item = get_object_or_404(OrderItem, pk=pk)
+    form = UpdateCartForm(request.POST, instance=item)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f'Updated {item.product} quantity.')
+
+    return redirect('shop:cart')
+
+@require_POST
+@login_required
+def remove_from_cart(request, pk):
+    item = get_object_or_404(OrderItem, pk=pk)
+    item.delete()
+    messages.success(request, f'Removed {item.product} from cart.')
+
+    return redirect('shop:cart')

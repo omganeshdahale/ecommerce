@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category
+from .models import Category, OrderItem
 
 PRODUCT_FILTER_INITIAL = {
     'sort_by': '-created',
@@ -49,5 +49,19 @@ class AddToCartForm(forms.Form):
         initial=1,
         max_value=20,
         min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control add-to-cart-input'})
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control quantity-input'}
+        )
     )
+
+class UpdateCartForm(forms.ModelForm):
+    quantity = forms.IntegerField(
+        min_value=1,
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control d-inline quantity-input'}
+        )
+    )
+
+    class Meta:
+        model = OrderItem
+        fields = ['quantity']

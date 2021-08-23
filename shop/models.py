@@ -1,7 +1,11 @@
 from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import ValidationError
-from django.core.validators import MinLengthValidator, RegexValidator
+from django.core.validators import (
+    MinLengthValidator,
+    RegexValidator,
+    MinValueValidator
+)
 from django.db import models
 from django.utils.text import slugify
 
@@ -157,6 +161,9 @@ class Order(models.Model):
             return self.amount_paid
         return sum(i.get_cost() for i in self.items.all())
 
+    def get_total_discount(self):
+        return sum(i.get_discount() for i in self.items.all())
+
     def clean(self):
         if not self.placed and (self.paid or self.amount_paid):
             raise ValidationError("Order Cannot be paid if its not placed")
@@ -176,10 +183,20 @@ class OrderItem(models.Model):
         on_delete=models.CASCADE
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)]
+    )
 
     def get_cost(self):
         return self.quantity * self.product.get_final_price()
+
+    def get_discount(self):
+        discount = 0
+        if self.product.discount_price:
+            discount = self.product.price - self.product.discount_price
+
+        return self.quantity * discount
 
     def __str__(self):
         return f'{self.product} x{self.quantity}'

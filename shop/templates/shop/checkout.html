@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+{% load my_extras %}
+
+{% block title %}Checkout{% endblock title %}
+
+{% block content %}
+  <!--Main layout-->
+  <main>
+    <div class="container wow fadeIn">
+
+      <!-- Heading -->
+      <h2 class="my-5 h2 text-center">Checkout form</h2>
+
+      <!--Grid row-->
+      <div class="row">
+
+        <!--Grid column-->
+        <div class="col-md-8 mb-4">
+
+          <!--Card-->
+          <div class="card">
+
+            <!--Card content-->
+            <form action="{% url 'shop:checkout' %}" method="POST" class="card-body">
+              {% csrf_token %}
+              {{ form|crispy }}
+              <button class="btn btn-primary btn-lg btn-block" type="submit">Continue to checkout</button>
+            </form>
+
+          </div>
+          <!--/.Card-->
+
+        </div>
+        <!--Grid column-->
+
+        <!--Grid column-->
+        <div class="col-md-4 mb-4">
+
+          <!-- Heading -->
+          <h4 class="d-flex justify-content-between align-items-center mb-3">
+            <span class="text-muted">Your cart</span>
+            <span class="badge badge-secondary badge-pill">{{ items|length }}</span>
+          </h4>
+
+          <!-- Cart -->
+          <ul class="list-group mb-3 z-depth-1">
+            {% for item in items %}
+              <li class="list-group-item d-flex justify-content-between lh-condensed">
+                <div>
+                  <h6 class="my-0">{{ item }}</h6>
+                  {# <small class="text-muted">Brief description</small> #}
+                </div>
+                <span class="text-muted">${{ item.get_cost }}</span>
+              </li>
+            {% endfor %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Total (USD)</span>
+              <strong>${{ order.get_total_cost }}</strong>
+            </li>
+          </ul>
+          <!-- Cart -->
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+    </div>
+  </main>
+  <!--Main layout-->
+{% endblock content %}

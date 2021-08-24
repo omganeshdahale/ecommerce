@@ -144,33 +144,40 @@ class Order(models.Model):
     )
     placed = models.DateTimeField(null=True, blank=True)
     paid = models.DateTimeField(null=True, blank=True)
-    amount_paid = models.DecimalField(
+    total_cost = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True
     )
-    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ('-created',)
+        ordering = ('-placed',)
 
     @admin.display(description='total cost')
     def get_total_cost(self):
-        if self.amount_paid:
-            return self.amount_paid
-        return sum(i.get_cost() for i in self.items.all())
+        if self.total_cost:
+            return self.total_cost
+        return sum(
+            i.get_cost() for i in self.items.all() if i.product.available
+        )
 
     def get_total_discount(self):
-        return sum(i.get_discount() for i in self.items.all())
+        return sum(
+            i.get_discount() for i in self.items.all() if i.product.available
+        )
+
+    def can_checkout(self):
+        return self.items.filter(product__available=True).exists()
 
     def clean(self):
-        if not self.placed and (self.paid or self.amount_paid):
+        if not self.placed and self.paid:
             raise ValidationError("Order Cannot be paid if its not placed")
-        if ((self.paid and not self.amount_paid)
-                or (self.amount_paid and not self.paid)):
+
+        if ((self.placed and not self.total_cost)
+                or (self.total_cost and not self.placed)):
             raise ValidationError(
-                "Both 'paid' and 'amount paid' should be provided together")
+                "Both 'placed' and 'total cost' should be provided together")
 
     def __str__(self):
         return f'Order #{self.pk}'
@@ -240,4 +247,4 @@ class OrderDetails(models.Model):
         verbose_name_plural = 'order details'
 
     def __str__(self):
-        return f'{order} Details'
+        return f'{self.order} Details'

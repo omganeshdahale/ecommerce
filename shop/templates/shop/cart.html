@@ -32,30 +32,36 @@
                 <td class="align-middle">
                   <a href="{% url 'shop:product_detail' item.product.slug %}" class="text-primary font-weight-bold">{{ item.product }}</a>
                 </td>
-                <td class="align-middle">
-                  <form action="{% url 'shop:update_cart' pk=item.pk %}" method="POST" class="d-flex">
-                    {% csrf_token %}
-                    {% with forms|get_item:item.pk as form %}
-                      {{ form.quantity }}
-                    {% endwith %}
-                    <button class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i></button>
-                  </form>
-                </td>
+                {% if item.product.available %}
+                  <td class="align-middle">
+                    <form action="{% url 'shop:update_cart' pk=item.pk %}" method="POST" class="d-flex">
+                      {% csrf_token %}
+                      {% with forms|get_item:item.pk as form %}
+                        {{ form.quantity }}
+                      {% endwith %}
+                      <button class="btn btn-sm btn-primary"><i class="fas fa-sync-alt"></i></button>
+                    </form>
+                  </td>
+                {% else %}
+                  <td class="align-middle text-danger">Out of Stock</td>
+                {% endif %}
                 <td class="align-middle">
                   <form action="{% url 'shop:remove_from_cart' item.pk %}" method="POST">
                     {% csrf_token %}
                     <button class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i></button>
                   </form>
                 </td>
-                <td class="align-middle">${{ item.product.price }}</td>
-                <td class="align-middle">
-                  <div class="d-flex">
-                    ${{ item.get_cost }}
-                    {% if item.get_discount %}
-                      <span class="badge success-color-dark ml-2 p-2">Saving ${{ item.get_discount }}</span>
-                    {% endif %}
-                  </div>
-                </td>
+                {% if item.product.available %}
+                  <td class="align-middle">${{ item.product.price }}</td>
+                  <td class="align-middle">
+                    <div class="d-flex">
+                      ${{ item.get_cost }}
+                      {% if item.get_discount %}
+                        <span class="badge success-color-dark ml-2 p-2">Saving ${{ item.get_discount }}</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                {% endif %}
               </tr>
             {% endfor %}
             <thead class="thead-light">
@@ -68,9 +74,13 @@
         </table>
       </div>
       <div class="text-right">
-        <p class="green-text font-weight-bold">You will save ${{ order.get_total_discount }} on this order</p>
+        {% if order.get_total_discount %}
+          <p class="green-text font-weight-bold">You will save ${{ order.get_total_discount }} on this order</p>
+        {% endif %}
         <a href="{% url 'shop:product_list' %}" class="btn btn-default">Continue Shoping</a>
-        <a href="#" class="btn btn-primary">Place Order</a>
+        {% if order.can_checkout %}
+          <a href="{% url 'shop:checkout' %}" class="btn btn-primary">Place Order</a>
+        {% endif %}
       </div>
     {% else %}
       <h1>Your Cart is Empty</h1>

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category, OrderItem
+from .models import Category, OrderItem, OrderDetails
 
 PRODUCT_FILTER_INITIAL = {
     'sort_by': '-created',
@@ -65,3 +65,8 @@ class UpdateCartForm(forms.ModelForm):
     class Meta:
         model = OrderItem
         fields = ['quantity']
+
+class CheckoutForm(forms.ModelForm):
+    class Meta:
+        model = OrderDetails
+        exclude = ['order']

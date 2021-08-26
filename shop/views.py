@@ -1,12 +1,18 @@
+import stripe
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from .forms import *
 from .models import Category, Product, Order, OrderItem
 from .utils import get_filtered_products
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def home(request):
     products = Product.objects.filter(available=True)[:8]
@@ -120,17 +126,42 @@ def checkout(request):
     if request.method == 'POST':
         form = CheckoutForm(request.POST)
         if form.is_valid():
+            if hasattr(order, 'orderdetails'):
+                order.orderdetails.delete()
+
             order_details = form.save(commit=False)
             order_details.order = order
             order_details.save()
 
-            order.placed = timezone.now()
-            order.total_cost = order.get_total_cost()
-            order.save()
+            if order_details.payment_method == 'C':
+                order.place_order()
+            else:
+                YOUR_DOMAIN = 'http://localhost:8000'
+                line_items = []
+                for item in items:
+                    line_items.append({
+                        'price_data': {
+                            'currency': 'usd',
+                            'unit_amount': int(
+                                item.product.get_final_price() * 100
+                            ),
+                            'product_data': {
+                                'name': item.product.name
+                            }
+                        },
+                        'quantity': item.quantity
+                    })
 
-            order.items.filter(
-                product__available=False
-            ).update(order=Order.objects.create(user=request.user))
+                checkout_session = stripe.checkout.Session.create(
+                    client_reference_id=order.pk,
+                    payment_method_types=['card'],
+                    line_items=line_items,
+                    mode='payment',
+                    success_url=YOUR_DOMAIN + '/success/',
+                    cancel_url=YOUR_DOMAIN + '/cancel/',
+                )
+
+                return redirect(checkout_session.url)
 
             return redirect('shop:success')
     else:
@@ -149,3 +180,34 @@ def checkout(request):
 
 def success(request):
     return render(request, 'shop/success.html')
+
+def cancel(request):
+    return render(request, 'shop/cancel.html')
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+    except ValueError as e:
+        # Invalid payload
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return HttpResponse(status=400)
+
+    # Handle the checkout.session.completed event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+
+        order = Order.objects.get(pk=session['client_reference_id'])
+        order.place_order()
+        order.paid = timezone.now()
+        order.save()
+
+    return HttpResponse(status=200)

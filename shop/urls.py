@@ -12,5 +12,7 @@ urlpatterns = [
     path('remove-from-cart/<int:pk>/', remove_from_cart, name='remove_from_cart'),
     path('checkout/', checkout, name='checkout'),
     path('success/', success, name='success'),
+    path('cancel/', cancel, name='cancel'),
+    path('webhooks/stripe/', stripe_webhook, name='stripe_webhook'),
     path('<slug:slug>/', product_detail, name='product_detail'),
 ]

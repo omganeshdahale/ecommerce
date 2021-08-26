@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category, OrderItem, OrderDetails
+from .models import Category, OrderItem, OrderDetails, PAYMENT_CHOICES
 
 PRODUCT_FILTER_INITIAL = {
     'sort_by': '-created',
@@ -54,6 +54,7 @@ class AddToCartForm(forms.Form):
         )
     )
 
+
 class UpdateCartForm(forms.ModelForm):
     quantity = forms.IntegerField(
         min_value=1,
@@ -66,7 +67,13 @@ class UpdateCartForm(forms.ModelForm):
         model = OrderItem
         fields = ['quantity']
 
+
 class CheckoutForm(forms.ModelForm):
+    payment_method = forms.ChoiceField(
+        choices=PAYMENT_CHOICES,
+        widget=forms.RadioSelect()
+    )
+
     class Meta:
         model = OrderDetails
         exclude = ['order']

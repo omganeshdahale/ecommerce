@@ -7,6 +7,7 @@ from django.core.validators import (
     MinValueValidator
 )
 from django.db import models
+from django.utils import timezone
 from django.utils.text import slugify
 
 LABEL_COLOUR_CHOICES = (
@@ -59,7 +60,7 @@ CITY_CHOICES = (
 )
 
 PAYMENT_CHOICES = (
-    # ('S','Stripe'),
+    ('S','Stripe'),
     ('C','Cash on Delivery '),
 )
 
@@ -169,6 +170,15 @@ class Order(models.Model):
 
     def can_checkout(self):
         return self.items.filter(product__available=True).exists()
+
+    def place_order(self):
+        self.placed = timezone.now()
+        self.total_cost = self.get_total_cost()
+        self.save()
+
+        self.items.filter(
+            product__available=False
+        ).update(order=Order.objects.create(user=self.user))
 
     def clean(self):
         if not self.placed and self.paid:

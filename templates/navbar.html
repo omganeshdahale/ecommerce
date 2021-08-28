@@ -42,12 +42,14 @@
               <span class="clearfix d-none d-sm-inline-block"> Cart </span>
             </a>
           </li>
-          <li class="nav-item">
-            <a href="{% url 'account_profile' %}" class="btn btn-primary btn-sm waves-effect">Profile</a>
-          </li>
-          <li class="nav-item">
-            <a href="{% url 'account_logout' %}" class="btn btn-danger btn-sm waves-effect">Logout</a>
-          </li>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user"></i></button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="{% url 'account_profile' %}">Profile</a>
+              <a class="dropdown-item" href="{% url 'shop:order_list' %}">Orders</a>
+              <a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a>
+            </div>
+          </div>
         {% else %}
           <li class="nav-item">
             <a href="{% url 'account_login' %}" class="btn btn-primary btn-sm waves-effect">Sign In</a>

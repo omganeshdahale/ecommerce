@@ -23,7 +23,9 @@
         <a href="{% url 'shop:product_detail' product.slug %}" class="dark-grey-text">
           {{ product }}
           {% if product.label_text %}
-            <span class="badge badge-pill {{ product.label_colour }}-color">{{ product.label_text }}</span>
+            <span class="badge badge-pill {{ product.get_label_colour_display }}-color">
+              {{ product.label_text }}
+            </span>
           {% endif %}
         </a>
       </strong>

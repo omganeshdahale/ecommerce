@@ -1,15 +1,19 @@
-import stripe
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+import stripe
+import weasyprint
 from .forms import *
 from .models import Category, Product, Order, OrderItem
+from .tasks import send_invoice
 from .utils import get_filtered_products
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -135,6 +139,7 @@ def checkout(request):
 
             if order_details.payment_method == 'C':
                 order.place_order()
+                send_invoice.delay(order.id)
             else:
                 YOUR_DOMAIN = 'http://localhost:8000'
                 line_items = []
@@ -209,5 +214,34 @@ def stripe_webhook(request):
         order.place_order()
         order.paid = timezone.now()
         order.save()
+        send_invoice.delay(order.id)
 
     return HttpResponse(status=200)
+
+@login_required
+def order_list(request):
+    context = {
+        'orders': request.user.orders.exclude(placed__isnull=True)
+    }
+    return render(request, 'shop/order_list.html', context)
+
+@login_required
+def invoice(request, pk):
+    order = get_object_or_404(Order, pk=pk, placed__isnull=False)
+    if not request.user.is_superuser and request.user != order.user:
+        raise PermissionDenied()
+
+    html = render_to_string('shop/invoice.html', {'order': order})
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'filename=order_{order.id}.pdf'
+
+    weasyprint.HTML(string=html).write_pdf(
+        response,
+        stylesheets=[
+            weasyprint.CSS(
+                settings.BASE_DIR / 'static/mystatic/css/invoice.css'
+            )
+        ]
+    )
+
+    return response

@@ -11,12 +11,12 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 LABEL_COLOUR_CHOICES = (
-    ('primary','primary'),
-    ('secondary','secondary'),
-    ('success','success'),
-    ('danger','danger'),
-    ('warning','warning'),
-    ('info','info'),
+    ('P','primary'),
+    ('S','secondary'),
+    ('Su','success'),
+    ('D','danger'),
+    ('W','warning'),
+    ('I','info'),
 )
 
 DIALCODE_CHOICES = (
@@ -66,16 +66,11 @@ PAYMENT_CHOICES = (
 
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
-    slug = models.SlugField(max_length=200, unique=True, blank=True)
 
     class Meta:
         ordering = ('name',)
         verbose_name = 'category'
         verbose_name_plural = 'categories'
-
-    def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -101,7 +96,7 @@ class Product(models.Model):
     label_colour = models.CharField(
         max_length=9,
         choices=LABEL_COLOUR_CHOICES,
-        default='primary'
+        default='P'
     )
     label_text = models.CharField(max_length=20, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -145,20 +140,12 @@ class Order(models.Model):
     )
     placed = models.DateTimeField(null=True, blank=True)
     paid = models.DateTimeField(null=True, blank=True)
-    total_cost = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True
-    )
 
     class Meta:
         ordering = ('-placed',)
 
     @admin.display(description='total cost')
     def get_total_cost(self):
-        if self.total_cost:
-            return self.total_cost
         return sum(
             i.get_cost() for i in self.items.all() if i.product.available
         )
@@ -173,8 +160,11 @@ class Order(models.Model):
 
     def place_order(self):
         self.placed = timezone.now()
-        self.total_cost = self.get_total_cost()
         self.save()
+
+        for item in self.items.filter(product__available=True):
+            item.cost = item.get_cost()
+            item.save()
 
         self.items.filter(
             product__available=False
@@ -183,11 +173,6 @@ class Order(models.Model):
     def clean(self):
         if not self.placed and self.paid:
             raise ValidationError("Order Cannot be paid if its not placed")
-
-        if ((self.placed and not self.total_cost)
-                or (self.total_cost and not self.placed)):
-            raise ValidationError(
-                "Both 'placed' and 'total cost' should be provided together")
 
     def __str__(self):
         return f'Order #{self.pk}'
@@ -204,8 +189,16 @@ class OrderItem(models.Model):
         default=1,
         validators=[MinValueValidator(1)]
     )
+    cost = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
 
     def get_cost(self):
+        if self.cost:
+            return self.cost
         return self.quantity * self.product.get_final_price()
 
     def get_discount(self):

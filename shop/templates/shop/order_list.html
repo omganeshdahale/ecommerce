@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load my_extras %}
+
+{% block title %}Order History{% endblock title %}
+
+{% block content %}
+  <div class="container dark-grey-text mt-4">
+    {% if orders %}
+      <h1>Order history</h1>
+      <div class="table-responsive mt-4">
+        <table class="table table-bordered table-sm">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Order ID</th>
+              <th scope="col">Placed on</th>
+              <th scope="col">Price</th>
+              <th scope="col">Payment</th>
+              <th scope="col">Status</th>
+              <th scope="col">Invoice</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ order.id }}</td>
+                <td>{{ order.placed|date:"M d, Y" }}</td>
+                <td>${{ order.get_total_cost }}</td>
+                <td>{% if order.paid %}Paid{% else %}Pending{% endif %}</td>
+                <td>Placed</td>
+                <td><a href="{% url 'shop:invoice' order.pk %}" class="text-primary">PDF</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <h1>Your order history is empty</h1>
+    {% endif %}
+  </div>
+{% endblock content %}

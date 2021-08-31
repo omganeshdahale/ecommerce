@@ -4,9 +4,11 @@ from django.core.exceptions import ValidationError
 from django.core.validators import (
     MinLengthValidator,
     RegexValidator,
-    MinValueValidator
+    MinValueValidator,
+    MaxValueValidator
 )
 from django.db import models
+from django.db.models import Avg
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -113,6 +115,16 @@ class Product(models.Model):
         if self.discount_price:
             return self.discount_price
         return self.price
+
+    def get_num_rating(self):
+        return self.reviews.filter(active=True).count()
+
+    def get_avg_rating(self):
+        rating = self.reviews.filter(active=True).aggregate(
+            Avg('rating')
+        )['rating__avg']
+
+        return rating if rating else 0
 
     def __str__(self):
         return self.name
@@ -251,3 +263,25 @@ class OrderDetails(models.Model):
 
     def __str__(self):
         return f'{self.order} Details'
+
+
+class Review(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='reviews',
+        on_delete=models.CASCADE
+    )
+    product = models.ForeignKey(
+        Product,
+        related_name='reviews',
+        on_delete=models.CASCADE
+    )
+    rating = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField(max_length=1000, blank=True)
+    active = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created',)

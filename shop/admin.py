@@ -30,21 +30,17 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = [
-        'user',
-        'get_total_cost',
-        'placed',
-        'paid',
-    ]
+    list_display = ['user', 'get_total_cost', 'placed', 'paid']
     list_filter = ['placed', 'paid']
     inlines = [OrderItemInline]
 
 
 @admin.register(OrderDetails)
 class OrderDetailsAdmin(admin.ModelAdmin):
-    list_display = [
-        'order',
-        'first_name',
-        'last_name',
-        'phone',
-    ]
+    list_display = ['order', 'first_name', 'last_name', 'phone']
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ['user', 'product', 'rating', 'created']
+    list_filter = ['active', 'created']

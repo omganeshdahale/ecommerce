@@ -4,6 +4,7 @@ def get_filtered_products(cd):
     sort_by = cd.pop('sort_by')
     min_price = cd.pop('min_price')
     max_price = cd.pop('max_price')
+    min_rating = cd.pop('min_rating')
     include_out_of_stock = cd.pop('include_out_of_stock')
 
     if cd['name__icontains'] == None:
@@ -22,6 +23,9 @@ def get_filtered_products(cd):
     elif sort_by == '-price':
         products = list(products)
         products.sort(key=lambda p: p.get_final_price(), reverse=True)
+    elif sort_by == '-rating':
+        products = list(products)
+        products.sort(key=lambda p: p.get_avg_rating(), reverse=True)
     elif sort_by:
         products = products.order_by(sort_by)
 
@@ -29,5 +33,7 @@ def get_filtered_products(cd):
         products = filter(lambda p: p.get_final_price() >= min_price, products)
     if max_price != None:
         products = filter(lambda p: p.get_final_price() <= max_price, products)
+    if min_rating:
+        products = filter(lambda p: p.get_avg_rating() >= min_rating, products)
 
     return list(products)

@@ -1,4 +1,5 @@
 {% load static %}
+{% load my_extras %}
 
 <!--Card-->
 <div class="card">
@@ -30,6 +31,12 @@
         </a>
       </strong>
     </h5>
+
+    {% if product.get_avg_rating %}
+      <p class="text-muted">
+        {{ product.get_avg_rating|rating_to_stars }}
+      </p>
+    {% endif %}
 
     <h4 class="font-weight-bold blue-text">
       <strong>${{ product.get_final_price }}</strong>

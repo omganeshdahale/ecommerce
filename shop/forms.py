@@ -1,5 +1,11 @@
 from django import forms
-from .models import Category, OrderItem, OrderDetails, PAYMENT_CHOICES
+from .models import (
+    Category,
+    OrderItem,
+    OrderDetails,
+    Review,
+    PAYMENT_CHOICES
+)
 
 PRODUCT_FILTER_INITIAL = {
     'sort_by': '-created',
@@ -7,6 +13,7 @@ PRODUCT_FILTER_INITIAL = {
     'category': None,
     'min_price': None,
     'max_price': None,
+    'min_rating': None,
     'include_out_of_stock': None,
 }
 
@@ -14,6 +21,7 @@ SORT_BY_CHOICES = (
     ('-created', 'Newest First'),
     ('price', 'Price low to high'),
     ('-price', 'Price high to low'),
+    ('-rating', 'Highest rating'),
 )
 
 class ProductFilterForm(forms.Form):
@@ -39,6 +47,11 @@ class ProductFilterForm(forms.Form):
     max_price = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
+        required=False
+    )
+    min_rating = forms.IntegerField(
+        max_value=5,
+        min_value=1,
         required=False
     )
     include_out_of_stock = forms.BooleanField(required=False)
@@ -77,3 +90,13 @@ class CheckoutForm(forms.ModelForm):
     class Meta:
         model = OrderDetails
         exclude = ['order']
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.HiddenInput(),
+            'comment': forms.Textarea(attrs={'rows': 5})
+        }

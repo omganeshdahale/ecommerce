@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load crispy_forms_tags %}
+{% load my_extras %}
 
 {% block title %}{{ product }}{% endblock title %}
 
@@ -57,6 +59,15 @@
               {% endif %}
             </h1>
 
+            {% if product.get_num_rating %}
+              <p>
+                <span class="text-muted mr-2">
+                  {{ product.get_avg_rating|rating_to_stars }}
+                </span>
+                {{ product.get_avg_rating }} out of 5 ({{ product.get_num_rating }} ratings)
+              </p>
+            {% endif %}
+
             <h2>
               {% if product.discount_price %}
                 <span class="mr-1">
@@ -71,7 +82,7 @@
                 <!-- Default input -->
                 {# <input type="number" value="1" aria-label="Search" class="form-control" style="width: 100px"> #}
                 {% csrf_token %}
-                {{ form.quantity }}
+                {{ a_form.quantity }}
                 <button class="btn btn-primary btn-md my-0 p" type="submit">Add to cart
                   <i class="fas fa-shopping-cart ml-1"></i>
                 </button>
@@ -99,6 +110,76 @@
           <h4 class="my-4 h4">Additional information</h4>
 
           <p>{{ product.description|linebreaks }}</p>
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+      <hr>
+
+      <!--Grid row-->
+      <div class="row d-flex justify-content-center wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6 text-center">
+
+          <h4 class="my-4 h4">Reviews</h4>
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+      {% if reviews %}
+        <!--Grid row-->
+        <div class="row d-flex justify-content-center wow fadeIn">
+
+          <!--Grid column-->
+          <div class="col-md-6">
+
+            {% for review in reviews %}
+              <div class="card mb-4">
+                <div class="card-body">
+                  <p class="text-muted">{{ review.rating|rating_to_stars }}</p>
+                  {{ review.comment|linebreaks }}
+                  <small class="text-muted">
+                    {{ review.user.get_full_name }} on {{ review.created }}
+                  </small>
+                </div>
+              </div>
+            {% endfor %}
+
+            {% include 'pagination.html' with page=reviews %}
+
+          </div>
+          <!--Grid column-->
+
+        </div>
+        <!--Grid row-->
+      {% endif %}
+
+      <!--Grid row-->
+      <div class="row d-flex justify-content-center wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6">
+
+          <h5>Add a review</h5>
+          <form action="{% url 'shop:review_create' product.pk %}" method="POST">
+            {% csrf_token %}
+            <p class="mb-2 text-muted" style="font-size:22px;">
+              <i class="fas fa-star js-star cursor-pointer" data-value=1></i>
+              <i class="fas fa-star js-star cursor-pointer" data-value=2></i>
+              <i class="fas fa-star js-star cursor-pointer" data-value=3></i>
+              <i class="fas fa-star js-star cursor-pointer" data-value=4></i>
+              <i class="fas fa-star js-star cursor-pointer" data-value=5></i>
+            </p>
+            {{ r_form|crispy }}
+            <button class="btn btn-md btn-primary">Submit</button>
+          </form>
 
         </div>
         <!--Grid column-->

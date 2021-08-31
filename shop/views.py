@@ -53,9 +53,23 @@ def product_list(request):
 
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
+    reviews = product.reviews.filter(active=True).exclude(comment='')
+
+    # pagination
+    paginator = Paginator(reviews, 4)
+    page = request.GET.get('page')
+    try:
+        reviews = paginator.page(page)
+    except PageNotAnInteger:
+        reviews = paginator.page(1)
+    except EmptyPage:
+        reviews = paginator.page(paginator.num_pages)
+
     context = {
         'product': product,
-        'form': AddToCartForm(),
+        'reviews': reviews,
+        'a_form': AddToCartForm(),
+        'r_form': ReviewForm(),
     }
     return render(request, 'shop/product_detail.html', context)
 
@@ -245,3 +259,20 @@ def invoice(request, pk):
     )
 
     return response
+
+@require_POST
+@login_required
+def review_create(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    form = ReviewForm(request.POST)
+    if form.is_valid():
+        request.user.reviews.filter(product=product).delete()
+
+        review = form.save(commit=False)
+        review.user = request.user
+        review.product = product
+        review.save()
+
+        messages.success(request, 'Review saved.')
+
+    return redirect('shop:product_detail', slug=product.slug)

@@ -1,0 +1,23 @@
+<!-- Sidebar -->
+<div class="sidebar-fixed position-fixed">
+
+  {% with url_name=request.resolver_match.url_name %}
+  <div class="list-group list-group-flush mt-5">
+    <a href="#" class="list-group-item list-group-item-action waves-effect">
+      <i class="fas fa-chart-pie mr-3"></i>Statistics
+    </a>
+    <a href="#" class="list-group-item list-group-item-action waves-effect">
+      <i class="fas fa-truck mr-3"></i>Orders</a>
+    <a href="{% url 'management:category_list' %}" class="list-group-item {% if url_name in 'category_list category_create category_edit' %}active{% else %}list-group-item-action{% endif %} waves-effect">
+      <i class="fas fa-tags mr-3"></i>Categories</a>
+    <a href="#" class="list-group-item list-group-item-action waves-effect">
+      <i class="fas fa-boxes mr-3"></i>Products</a>
+    <a href="#" class="list-group-item list-group-item-action waves-effect">
+      <i class="fas fa-comment mr-3"></i>Reviews</a>
+    <a href="#" class="list-group-item list-group-item-action waves-effect">
+      <i class="fas fa-users mr-3"></i>Users</a>
+  </div>
+  {% endwith %}
+
+</div>
+<!-- Sidebar -->

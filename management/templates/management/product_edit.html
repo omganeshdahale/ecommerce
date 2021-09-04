@@ -1,0 +1,56 @@
+{% extends "management/base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Edit {{ product }}{% endblock title %}
+
+{% block content %}
+  <!-- Heading -->
+  <div class="card mb-4 wow fadeIn">
+
+    <!--Card content-->
+    <div class="card-body d-sm-flex justify-content-between">
+
+      <h4 class="mb-2 mb-sm-0 pt-1">
+        <a href="{% url 'management:product_list' %}">Products</a>
+        <span>/ {{ product.id }} /</span>
+        <span>Edit</span>
+      </h4>
+
+    </div>
+
+  </div>
+  <!-- Heading -->
+
+  <!--Card-->
+  <div class="card mx-auto max-width-650">
+
+    <!--Card content-->
+    <div class="card-body">
+
+      <form method="post" enctype="multipart/form-data" class="d-inline">
+ 
+        {% csrf_token %}
+        {{ form|crispy }}
+
+        <div class="row">
+          {{ formset.management_form }}
+          {% for form in formset %}
+              <div class="col-sm-6">
+                {{ form|crispy }}
+              </div>
+          {% endfor %}
+        </div>
+
+        <button class="btn btn-primary">Update</button>
+      </form>
+
+      <form action="{% url 'management:product_delete' product.pk %}" method="POST" class="d-inline js-confirm-form-submit" data-confirm-msg="This action cannot be undone.&#10;are you sure to continue?">
+        {% csrf_token %}
+        <button class="btn btn-danger">Delete</button>
+      </form>
+
+    </div>
+
+  </div>
+{% endblock content %}

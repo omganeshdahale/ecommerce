@@ -28,7 +28,6 @@
         <table class="table table-sm table-bordered">
           <thead class="thead-light">
             <tr>
-              <th scope="col">#</th>
               <th scope="col">ID</th>
               <th scope="col">Name</th>
               <th scope="col">Products</th>
@@ -38,7 +37,6 @@
           <tbody>
             {% for category in categories %}
               <tr>
-                <th scope="row">{{ forloop.counter }}</th>
                 <td>{{ category.id }}</td>
                 <td>{{ category }}</td>
                 <td>{{ category.products.count }}</td>

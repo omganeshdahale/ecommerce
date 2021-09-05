@@ -1,5 +1,6 @@
 {% extends "management/base.html" %}
 
+{% load static %}
 {% load crispy_forms_tags %}
 
 {% block title %}Create product{% endblock title %}
@@ -48,3 +49,8 @@
 
   </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script src="https://cdn.ckeditor.com/ckeditor5/29.2.0/classic/ckeditor.js"></script>
+  <script type="text/javascript" src="{% static 'management/js/ckeditor.js' %}"></script>
+{% endblock extra_scripts %}

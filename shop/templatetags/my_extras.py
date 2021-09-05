@@ -1,5 +1,6 @@
 from django import template
 from django.utils.safestring import mark_safe
+import markdown
 from shop.models import Order
 
 register = template.Library()
@@ -21,3 +22,7 @@ def rating_to_stars(rating):
         '<i class="fas fa-star text-warning"></i>' * int(rating)
         + '<i class="fas fa-star"></i>' * (5 - int(rating))
     )
+
+@register.filter(name='markdown')
+def markdown_format(text):
+    return mark_safe(markdown.markdown(text))

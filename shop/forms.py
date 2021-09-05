@@ -9,7 +9,7 @@ from .models import (
 
 PRODUCT_FILTER_INITIAL = {
     'sort_by': '-created',
-    'name__icontains': None,
+    'search': None,
     'category': None,
     'min_price': None,
     'max_price': None,
@@ -29,8 +29,7 @@ class ProductFilterForm(forms.Form):
         choices=SORT_BY_CHOICES,
         required=False
     )
-    name__icontains = forms.CharField(
-        label='Search',
+    search = forms.CharField(
         max_length=100,
         required=False
     )

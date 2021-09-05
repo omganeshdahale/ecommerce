@@ -1,14 +1,14 @@
+from django.db.models import Q
 from .models import Product
 
 def get_filtered_products(cd):
     sort_by = cd.pop('sort_by')
+    search = cd.pop('search')
     min_price = cd.pop('min_price')
     max_price = cd.pop('max_price')
     min_rating = cd.pop('min_rating')
     include_out_of_stock = cd.pop('include_out_of_stock')
 
-    if cd['name__icontains'] == None:
-        cd.pop('name__icontains')
     if cd['category'] == None:
         cd.pop('category')
 
@@ -16,6 +16,11 @@ def get_filtered_products(cd):
         products = Product.objects.filter(**cd)
     else:
         products = Product.objects.filter(available=True, **cd)
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | Q(description__icontains=search)
+        )
 
     if sort_by == 'price':
         products = list(products)

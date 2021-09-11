@@ -1,5 +1,5 @@
 from django import forms
-from shop.models import Category, Product, ProductImage
+from shop.models import Category, Product, ProductImage, Order
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -17,3 +17,12 @@ class ProductImageForm(forms.ModelForm):
     class Meta:
         model = ProductImage
         fields = ('image',)
+
+
+class OrderRejectForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ('reject_reason',)
+        widgets = {
+            'reject_reason': forms.Textarea(attrs={'rows': 7})
+        }

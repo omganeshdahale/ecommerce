@@ -1,0 +1,10 @@
+<h1 style="color: #555555;font-size: 23px;">
+  Your order with id {{ order.id }} is rejected.
+</h1>
+
+{% if order.reject_reason %}
+  <p style="color: #555555;font-size: 14px;">Reason: {{ order.reject_reason }}</p>
+{% endif %}
+
+<hr style="margin-top: 1rem;margin-bottom: 1rem;border: 0;border-top: 1px solid rgba(0,0,0,.1);">
+<small style="color: #555555;font-size: 12px;">This is an automatic email please do not reply.</small>

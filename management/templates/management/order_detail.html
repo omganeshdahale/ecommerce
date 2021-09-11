@@ -1,0 +1,234 @@
+{% extends "management/base.html" %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+{% load my_extras %}
+
+{% block title %}{{ order }}{% endblock title %}
+
+{% block content %}
+  <!-- Heading -->
+  <div class="card mb-4 wow fadeIn">
+
+    <!--Card content-->
+    <div class="card-body d-sm-flex justify-content-between">
+
+      <h4 class="mb-2 mb-sm-0 pt-1">
+        <a href="{% url 'management:order_list' %}">Orders</a>
+        <span>/ {{ order.id }}</span>
+      </h4>
+
+    </div>
+
+  </div>
+  <!-- Heading -->
+
+  <div class="card-deck">
+    <!--Card-->
+    <div class="card mb-3">
+
+      <!--Card content-->
+      <div class="card-body">
+
+        <h2 class="card-title font-weight-bold">Order</h2>
+        <hr>
+        <table>
+          <tr>
+            <td class="w-50" valign="top">Order ID:</td>
+            <td>{{ order.id }}</td>
+          </tr>
+          <tr>
+            <td valign="top">User:</td>
+            <td>{{ order.user }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Placed on:</td>
+            <td>{{ order.placed }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Price:</td>
+            <td>${{ order.get_total_cost }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Payment:</td>
+            <td>
+              {% if order.paid %}
+                <span class="badge bg-success">Paid</span>
+              {% else %}
+                <span class="badge bg-warning">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% if order.paid %}
+            <tr>
+              <td valign="top">Paid on:</td>
+              <td>{{ order.paid }}</td>
+            </tr>
+          {% endif %}
+          {% if order.dispatched %}
+            <tr>
+              <td valign="top">Dispatched on:</td>
+              <td>{{ order.dispatched }}</td>
+            </tr>
+          {% endif %}
+          {% if order.delivered %}
+            <tr>
+              <td valign="top">Delivered on:</td>
+              <td>{{ order.delivered }}</td>
+            </tr>
+          {% endif %}
+          {% if order.rejected %}
+            <tr>
+              <td valign="top">Rejected on:</td>
+              <td>{{ order.rejected }}</td>
+            </tr>
+            {% if order.reject_reason %}
+              <tr>
+                <td valign="top">Reject reason:</td>
+                <td>{{ order.reject_reason }}</td>
+              </tr>
+            {% endif %}
+          {% endif %}
+          <tr>
+            <td valign="top">Status:</td>
+            <td>
+              <span class="badge bg-{{ order|order_status|order_status_colour }}">
+                {{ order|order_status }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td valign="top">Invoice:</td>
+            <td><a href="{% url 'shop:invoice' order.pk %}" class="text-primary">PDF</a></td>
+          </tr>
+        </table>
+
+        {% if not order.rejected and not order.delivered %}
+          <form action="{% if not order.dispatched %}{% url 'management:order_dispatch' order.pk %}{% else %}{% url 'management:order_deliver' order.pk %}{% endif %}" method="POST">
+            {% csrf_token %}
+            <button class="btn btn-success mt-4">
+              {% if not order.dispatched %}
+                Dispatch
+              {% elif order.paid %}
+                Deliver
+              {% else %}
+                Pay and Deliver
+              {% endif %}
+            </button>
+          </form>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <!--Card-->
+    <div class="card mb-3">
+
+      <!--Card content-->
+      <div class="card-body">
+
+        <h2 class="card-title font-weight-bold">Address</h2>
+        <hr>
+        <table>
+          <tr>
+            <td class="w-50" valign="top">First name:</td>
+            <td>{{ order.orderdetails.first_name }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Last name:</td>
+            <td>{{ order.orderdetails.last_name }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Email:</td>
+            <td>{{ order.orderdetails.email }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Dial code:</td>
+            <td>{{ order.orderdetails.dial_code }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Phone:</td>
+            <td>{{ order.orderdetails.phone }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Address:</td>
+            <td>{{ order.orderdetails.address }}</td>
+          </tr>
+          <tr>
+            <td valign="top">City:</td>
+            <td>{{ order.orderdetails.get_city_display }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Postal code:</td>
+            <td>{{ order.orderdetails.postal_code }}</td>
+          </tr>
+          <tr>
+            <td valign="top">Payment method:</td>
+            <td>{{ order.orderdetails.get_payment_method_display }}</td>
+          </tr>
+        </table>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <h2 class="card-title font-weight-bold">Order Items</h2>
+      <hr>
+      <div class="table-responsive mt-4">
+        <table class="table table-sm table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Image</th>
+              <th scope="col">Product</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Unit price</th>
+              <th scope="col">Price</th>
+              <th scope="col">Available</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+              <tr>
+                <th scope="row" class="align-middle">{{ forloop.counter }}</th>
+                <td>
+                  <img src="{% if item.product.images.first %}{{ item.product.images.first.image.url }}{% else %}{% static 'shop/img/no_image.png' %}{% endif %}" style="height:70px; width:70px;">
+                </td>
+                <td>{{ item.product }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.product.price }}</td>
+                <td>${{ item.get_cost }}</td>
+                <td>{{ item.product.available }}</td>
+              </tr>
+            {% endfor %}
+            <thead class="thead-light">
+              <tr>
+                <th colspan="6" class="font-weight-bold">Total</th>
+                <th class="font-weight-bold">${{ order.get_total_cost }}</th>
+              </tr>
+            </thead>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% if not order.rejected and not order.paid %}
+    <div class="card mx-auto max-width-650">
+      <div class="card-body">
+        <h2 class="card-title font-weight-bold">Reject Order</h2>
+        <hr>
+        <form method="POST">
+          {% csrf_token %}
+          {{ form|crispy }}
+          <button class="btn btn-danger">Reject</button>
+        </form>
+      </div>
+    </div>  
+  {% endif %}
+  
+{% endblock content %}

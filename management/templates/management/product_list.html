@@ -53,7 +53,9 @@
                 <td>
                   {% if product.discount_price %}${% endif %}{{ product.discount_price }}
                 </td>
-                <td>{{ product.available }}</td>
+                <td>
+                  <span class="badge bg-{% if product.available %}success{% else %}danger{% endif %}">{{ product.available }}</span>
+                </td>
                 <td>{{ product.created|date:"M d, Y" }}</td>
                 <td>{{ product.updated|date:"M d, Y" }}</td>
                 <td>

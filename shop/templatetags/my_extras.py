@@ -26,3 +26,25 @@ def rating_to_stars(rating):
 @register.filter(name='markdown')
 def markdown_format(text):
     return mark_safe(markdown.markdown(text))
+
+@register.filter
+def order_status(order):
+    if order.rejected:
+        return 'Rejected'
+    elif order.delivered:
+        return 'Completed'
+    elif order.dispatched:
+        return 'Dispatched'
+    elif order.placed:
+        return 'Placed'
+
+@register.filter
+def order_status_colour(status):
+    if status == 'Rejected':
+        return 'danger'
+    elif status == 'Completed':
+        return 'success'
+    elif status == 'Dispatched':
+        return 'warning'
+    elif status == 'Placed':
+        return 'primary'

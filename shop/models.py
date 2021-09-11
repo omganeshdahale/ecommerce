@@ -152,20 +152,20 @@ class Order(models.Model):
     )
     placed = models.DateTimeField(null=True, blank=True)
     paid = models.DateTimeField(null=True, blank=True)
+    dispatched = models.DateTimeField(null=True, blank=True)
+    delivered = models.DateTimeField(null=True, blank=True)
+    rejected = models.DateTimeField(null=True, blank=True)
+    reject_reason = models.TextField(max_length=1000, blank=True)
 
     class Meta:
         ordering = ('-placed',)
 
     @admin.display(description='total cost')
     def get_total_cost(self):
-        return sum(
-            i.get_cost() for i in self.items.all() if i.product.available
-        )
+        return sum(i.get_cost() for i in self.items.all())
 
     def get_total_discount(self):
-        return sum(
-            i.get_discount() for i in self.items.all() if i.product.available
-        )
+        return sum(i.get_discount() for i in self.items.all())
 
     def can_checkout(self):
         return self.items.filter(product__available=True).exists()
@@ -183,8 +183,27 @@ class Order(models.Model):
         ).update(order=Order.objects.create(user=self.user))
 
     def clean(self):
-        if not self.placed and self.paid:
-            raise ValidationError("Order Cannot be paid if its not placed")
+        if not self.placed:
+            if self.paid:
+                raise ValidationError(
+                    "Order can't be paid if its not placed"
+                )
+            if self.dispatched:
+                raise ValidationError(
+                    "Order can't be dispatched if its not placed"
+                )
+            if self.rejected:
+                raise ValidationError(
+                    "Order can't be rejected if its not placed"
+                )
+        if not self.dispatched and self.delivered:
+            raise ValidationError(
+                "Order can't be delivered if its not dispatched"
+            )
+        if self.paid and self.rejected:
+            raise ValidationError(
+                "Order can't be rejected if its paid"
+            )
 
     def __str__(self):
         return f'Order #{self.pk}'
@@ -211,13 +230,16 @@ class OrderItem(models.Model):
     def get_cost(self):
         if self.cost:
             return self.cost
-        return self.quantity * self.product.get_final_price()
+        elif self.product.available:
+            return self.quantity * self.product.get_final_price()
+        else:
+            return 0
 
     def get_discount(self):
-        discount = 0
-        if self.product.discount_price:
-            discount = self.product.price - self.product.discount_price
+        if not (self.product.discount_price and self.product.available):
+            return 0
 
+        discount = self.product.price - self.product.discount_price
         return self.quantity * discount
 
     def __str__(self):

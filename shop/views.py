@@ -242,7 +242,9 @@ def order_list(request):
 @login_required
 def invoice(request, pk):
     order = get_object_or_404(Order, pk=pk, placed__isnull=False)
-    if not request.user.is_superuser and request.user != order.user:
+    if (not request.user.is_superuser
+            and not request.user.groups.filter(name='admin').exists()
+            and request.user != order.user):
         raise PermissionDenied()
 
     html = render_to_string('shop/invoice.html', {'order': order})

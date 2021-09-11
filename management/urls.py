@@ -18,4 +18,7 @@ urlpatterns = [
     path('order/<int:pk>/', order_detail, name='order_detail'),
     path('order/<int:pk>/dispatch', order_dispatch, name='order_dispatch'),
     path('order/<int:pk>/deliver', order_deliver, name='order_deliver'),
+
+    path('reviews/', review_list, name='review_list'),
+    path('review-active-toggle/<int:pk>/', review_active_toggle, name='review_active_toggle'),
 ]

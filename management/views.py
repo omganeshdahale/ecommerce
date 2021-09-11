@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
-from shop.models import Category, Product, ProductImage, Order
+from shop.models import Category, Product, ProductImage, Order, Review
 from myproject.settings import EMAIL_HOST_USER
 from .decorators import group_required
 from .forms import *
@@ -245,3 +245,35 @@ def order_deliver(request, pk):
     messages.success(request, 'Order delivered')
 
     return redirect('management:order_detail', pk=pk)
+
+@login_required
+@group_required('admin')
+def review_list(request):
+    paginator = Paginator(Review.objects.all(), 15)
+    page = request.GET.get('page')
+    try:
+        reviews = paginator.page(page)
+    except PageNotAnInteger:
+        reviews = paginator.page(1)
+    except EmptyPage:
+        reviews = paginator.page(paginator.num_pages)
+
+    return render(request, 'management/review_list.html', {
+        'reviews': reviews
+    })
+
+@require_POST
+@login_required
+@group_required('admin')
+def review_active_toggle(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    if review.active:
+        review.active = False
+        messages.success(request, f'Review deactivated')
+    else:
+        review.active = True
+        messages.success(request, f'Review activated')
+
+    review.save()
+
+    return redirect('management:review_list')

@@ -12,7 +12,7 @@
       <i class="fas fa-tags mr-3"></i>Categories</a>
     <a href="{% url 'management:product_list' %}" class="list-group-item {% if url_name in 'product_list product_create product_edit' %}active{% else %}list-group-item-action{% endif %} waves-effect">
       <i class="fas fa-boxes mr-3"></i>Products</a>
-    <a href="#" class="list-group-item list-group-item-action waves-effect">
+    <a href="{% url 'management:review_list' %}" class="list-group-item {% if url_name in 'review_list' %}active{% else %}list-group-item-action{% endif %} waves-effect">
       <i class="fas fa-comment mr-3"></i>Reviews</a>
     <a href="#" class="list-group-item list-group-item-action waves-effect">
       <i class="fas fa-users mr-3"></i>Users</a>

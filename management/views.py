@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -12,6 +13,8 @@ from shop.models import Category, Product, ProductImage, Order, Review
 from myproject.settings import EMAIL_HOST_USER
 from .decorators import group_required
 from .forms import *
+
+User = get_user_model()
 
 @login_required
 @group_required('admin')
@@ -277,3 +280,31 @@ def review_active_toggle(request, pk):
     review.save()
 
     return redirect('management:review_list')
+
+@login_required
+@group_required('admin')
+def user_list(request):
+    paginator = Paginator(User.objects.all().order_by('date_joined'), 25)
+    page = request.GET.get('page')
+    try:
+        users = paginator.page(page)
+    except PageNotAnInteger:
+        users = paginator.page(1)
+    except EmptyPage:
+        users = paginator.page(paginator.num_pages)
+
+    return render(request, 'management/user_list.html', {
+        'users': users
+    })
+
+@login_required
+@group_required('admin')
+def user_detail(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    orders = user.orders.exclude(placed__isnull=True)
+
+    context = {
+        'user': user,
+        'orders': orders
+    }
+    return render(request, 'management/user_detail.html', context)

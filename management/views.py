@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db.models import Q, Value as V
+from django.db.models.functions import Concat
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.forms import modelformset_factory, inlineformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
@@ -71,7 +73,15 @@ def category_delete(request, pk):
 @login_required
 @group_required('admin')
 def product_list(request):
-    paginator = Paginator(Product.objects.all(), 15)
+    search = request.GET.get('search', None)
+    if search:
+        products = Product.objects.filter(
+            Q(name__icontains=search) | Q(description__icontains=search)
+        )
+    else:
+        products = Product.objects.all()
+
+    paginator = Paginator(products, 15)
     page = request.GET.get('page')
     try:
         products = paginator.page(page)
@@ -162,7 +172,22 @@ def product_delete(request, pk):
 @login_required
 @group_required('admin')
 def order_list(request):
-    paginator = Paginator(Order.objects.exclude(placed__isnull=True), 15)
+    search = request.GET.get('search', None)
+    if search:
+        orders = Order.objects.exclude(placed__isnull=True).annotate(
+            full_name=Concat(
+                'orderdetails__first_name',
+                V(' '),
+                'orderdetails__last_name'
+            )
+        ).filter(
+            Q(orderdetails__email__icontains=search)
+            | Q(full_name__icontains=search)
+        )
+    else:
+        orders = Order.objects.exclude(placed__isnull=True)
+
+    paginator = Paginator(orders, 15)
     page = request.GET.get('page')
     try:
         orders = paginator.page(page)
@@ -252,7 +277,20 @@ def order_deliver(request, pk):
 @login_required
 @group_required('admin')
 def review_list(request):
-    paginator = Paginator(Review.objects.all(), 15)
+    search = request.GET.get('search', None)
+    if search:
+        reviews = Review.objects.annotate(
+            full_name=Concat('user__first_name', V(' '), 'user__last_name')
+        ).filter(
+            Q(user__username__icontains=search)
+            | Q(user__email__icontains=search)
+            | Q(full_name__icontains=search)
+            | Q(product__name__icontains=search)
+        )
+    else:
+        reviews = Review.objects.all()
+
+    paginator = Paginator(reviews, 15)
     page = request.GET.get('page')
     try:
         reviews = paginator.page(page)
@@ -284,7 +322,19 @@ def review_active_toggle(request, pk):
 @login_required
 @group_required('admin')
 def user_list(request):
-    paginator = Paginator(User.objects.all().order_by('date_joined'), 25)
+    search = request.GET.get('search', None)
+    if search:
+        users = User.objects.annotate(
+            full_name=Concat('first_name', V(' '), 'last_name')
+        ).filter(
+            Q(username__icontains=search)
+            | Q(email__icontains=search)
+            | Q(full_name__icontains=search)
+        )
+    else:
+        users = User.objects.all()
+
+    paginator = Paginator(users.order_by('date_joined'), 25)
     page = request.GET.get('page')
     try:
         users = paginator.page(page)

@@ -27,6 +27,22 @@
   </div>
   <!-- Heading -->
 
+  <div class="card-deck">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Top selling</h5>
+        <canvas id="bar-sales"></canvas>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Highest rated</h5>
+        <canvas id="bar-rating"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!--Card-->
   <div class="card">
 
@@ -82,3 +98,50 @@
 
   </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script type="text/javascript">
+    $(document).ready(function(){
+      var ctxBarSales = $('#bar-sales');
+      var barSales = new Chart(ctxBarSales, {
+          type: 'bar',
+          data: {
+              labels: {{ sales_labels|safe }},
+              datasets: [{
+                  label: 'Sales',
+                  data: {{ sales_data }},
+                  backgroundColor: '#4285F4',
+              }]
+          },
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      var ctxBarRating = $('#bar-rating');
+      var barRating = new Chart(ctxBarRating, {
+          type: 'bar',
+          data: {
+              labels: {{ rating_labels|safe }},
+              datasets: [
+                {
+                  label: 'Rating',
+                  data: {{ rating_data }},
+                  backgroundColor: '#4285F4',
+                }]
+          },
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+    });
+  </script>
+{% endblock extra_scripts %}

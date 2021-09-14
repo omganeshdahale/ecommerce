@@ -23,6 +23,29 @@
   </div>
   <!-- Heading -->
 
+  <div class="card-deck">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Income from this product</h5>
+        <p>${{ product.get_income }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Sold</h5>
+        <p>{{ product.get_sales }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Demand</h5>
+        <p>{{ product.get_demand }}</p>
+      </div>
+    </div>
+  </div>
+
   <!--Card-->
   <div class="card mx-auto max-width-650">
 

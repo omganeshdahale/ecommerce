@@ -28,6 +28,52 @@
   </div>
   <!-- Heading -->
 
+  <div class="card-deck">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Total income</h5>
+        <p>${{ income }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Orders pending</h5>
+        <p>{{ orders_pending }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Deliveries pending</h5>
+        <p>{{ deliveries_pending }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Orders done</h5>
+        <p>{{ orders_done }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-deck">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Income over time</h5>
+        <canvas id="line-time-income"></canvas>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Income from cities</h5>
+        <canvas id="bar-city-income"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!--Card-->
   <div class="card">
 
@@ -83,3 +129,51 @@
 
   </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script type="text/javascript">
+    $(document).ready(function(){
+      var ctxLineTimeIncome = $('#line-time-income');
+      var lineTimeIncome = new Chart(ctxLineTimeIncome, {
+          type: 'line',
+          data: {
+              labels: {{ line_labels|safe }},
+              datasets: [{
+                  label: 'Income in USD',
+                  data: {{ line_data }},
+                  borderColor: '#4285F4',
+                  tension: 0.1
+              }]
+          },
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+
+      var ctxBarCityIncome = $('#bar-city-income');
+      var barCityIncome = new Chart(ctxBarCityIncome, {
+          type: 'bar',
+          data: {
+              labels: {{ bar_labels|safe }},
+              datasets: [
+                {
+                  label: 'Income in USD',
+                  data: {{ bar_data }},
+                  backgroundColor: '#4285F4',
+                }]
+          },
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: true
+                  }
+              }
+          }
+      });
+    });
+  </script>
+{% endblock extra_scripts %}

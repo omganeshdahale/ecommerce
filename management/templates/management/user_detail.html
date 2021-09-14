@@ -23,6 +23,29 @@
   </div>
   <!-- Heading -->
 
+  <div class="card-deck">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Income from this user</h5>
+        <p>${{ user.get_income }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Orders pending</h5>
+        <p>{{ user.get_orders_pending }}</p>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Deliveries pending</h5>
+        <p>{{ user.get_deliveries_pending }}</p>
+      </div>
+    </div>
+  </div>
+
   <!--Card-->
   <div class="card mb-3 max-width-650">
 

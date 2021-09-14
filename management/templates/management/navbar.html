@@ -19,9 +19,6 @@
 
       <!-- Left -->
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item">
-          <a class="nav-link waves-effect" href="#">Statistics</a>
-        </li>
         <li class="nav-item {% if url_name in 'order_list order_detail' %}active{% endif %}">
           <a class="nav-link waves-effect" href="{% url 'management:order_list' %}">Orders</a>
         </li>

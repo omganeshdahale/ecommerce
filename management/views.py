@@ -1,8 +1,9 @@
+import calendar
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
-from django.db.models import Q, Value as V
+from django.db.models import Avg, Q, Sum, Value as V
 from django.db.models.functions import Concat
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.forms import modelformset_factory, inlineformset_factory
@@ -11,7 +12,14 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.views.decorators.http import require_POST
-from shop.models import Category, Product, ProductImage, Order, Review
+from shop.models import (
+    Category,
+    Product,
+    ProductImage,
+    Order,
+    Review,
+    CITY_CHOICES
+)
 from myproject.settings import EMAIL_HOST_USER
 from .decorators import group_required
 from .forms import *
@@ -90,9 +98,23 @@ def product_list(request):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
 
-    return render(request, 'management/product_list.html', {
-        'products': products
-    })
+    ps = Product.objects.annotate(
+        sales=Sum('items__quantity'),
+        rating=Avg('reviews__rating')
+    )
+    sales_labels = [p.name for p in ps.order_by('-sales')[:15] if p.sales]
+    sales_data = [p.sales for p in ps.order_by('-sales')[:15] if p.sales]
+    rating_labels = [p.name for p in ps.order_by('-rating')[:15] if p.rating]
+    rating_data = [p.rating for p in ps.order_by('-rating')[:15] if p.rating]
+
+    context = {
+        'products': products,
+        'sales_labels': sales_labels,
+        'sales_data': sales_data,
+        'rating_labels': rating_labels,
+        'rating_data': rating_data
+    }
+    return render(request, 'management/product_list.html', context)
 
 @login_required
 @group_required('admin')
@@ -174,7 +196,7 @@ def product_delete(request, pk):
 def order_list(request):
     search = request.GET.get('search', None)
     if search:
-        orders = Order.objects.exclude(placed__isnull=True).annotate(
+        orders = Order.objects.exclude(placed=None).annotate(
             full_name=Concat(
                 'orderdetails__first_name',
                 V(' '),
@@ -185,7 +207,7 @@ def order_list(request):
             | Q(full_name__icontains=search)
         )
     else:
-        orders = Order.objects.exclude(placed__isnull=True)
+        orders = Order.objects.exclude(placed=None)
 
     paginator = Paginator(orders, 15)
     page = request.GET.get('page')
@@ -196,9 +218,63 @@ def order_list(request):
     except EmptyPage:
         orders = paginator.page(paginator.num_pages)
 
-    return render(request, 'management/order_list.html', {
-        'orders': orders
-    })
+    bar_labels = []
+    bar_data = []
+    for city, city_label in CITY_CHOICES:
+        income = Order.objects.exclude(delivered=None).filter(
+            orderdetails__city=city
+        ).aggregate(Sum('items__cost'))['items__cost__sum']
+        if income:
+            bar_labels.append(city_label)
+            bar_data.append(float(income))
+
+    bar_labels = [i for _, i in sorted(
+        zip(bar_data, bar_labels),
+        reverse=True
+    )][:15]
+    bar_data.sort(reverse=True)
+    bar_data = bar_data[:15]
+
+    line_labels = []
+    line_data = []
+    now = timezone.now()
+
+    for m in range(now.month-11, now.month+1):
+        y = now.year if m > 0 else now.year - 1
+        m = m if m > 0 else 12 + m
+
+        line_labels.append(calendar.month_name[m])
+        income = Order.objects.filter(
+            delivered__month=m,
+            delivered__year=y
+        ).aggregate(Sum('items__cost'))['items__cost__sum']
+        line_data.append(float(income) if income else 0)
+
+    income = Order.objects.exclude(delivered=None).aggregate(
+        Sum('items__cost')
+    )['items__cost__sum']
+    orders_pending = Order.objects.exclude(placed=None).filter(
+        dispatched=None,
+        rejected=None
+    ).count()
+    deliveries_pending = Order.objects.exclude(dispatched=None).filter(
+        delivered=None,
+        rejected=None
+    ).count()
+    orders_done = Order.objects.exclude(delivered=None).count()
+
+    context = {
+        'orders': orders,
+        'bar_labels': bar_labels,
+        'bar_data': bar_data,
+        'line_labels': line_labels,
+        'line_data': line_data,
+        'income': income,
+        'orders_pending': orders_pending,
+        'deliveries_pending': deliveries_pending,
+        'orders_done': orders_done
+    }
+    return render(request, 'management/order_list.html', context)
 
 @login_required
 @group_required('admin')
@@ -351,7 +427,7 @@ def user_list(request):
 @group_required('admin')
 def user_detail(request, pk):
     user = get_object_or_404(User, pk=pk)
-    orders = user.orders.exclude(placed__isnull=True)
+    orders = user.orders.exclude(placed=None)
 
     context = {
         'user': user,

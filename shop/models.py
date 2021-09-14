@@ -8,7 +8,7 @@ from django.core.validators import (
     MaxValueValidator
 )
 from django.db import models
-from django.db.models import Avg
+from django.db.models import Avg, Sum
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -126,6 +126,27 @@ class Product(models.Model):
 
         return rating if rating else 0
 
+    def get_income(self):
+        income = self.items.exclude(order__delivered=None).aggregate(
+            Sum('cost')
+        )['cost__sum']
+
+        return income if income else 0
+
+    def get_sales(self):
+        sales = self.items.exclude(order__delivered=None).aggregate(
+            Sum('quantity')
+        )['quantity__sum']
+
+        return sales if sales else 0
+
+    def get_demand(self):
+        demand = self.items.exclude(order__placed=None).filter(
+            order__dispatched=None
+        ).aggregate(Sum('quantity'))['quantity__sum']
+
+        return demand if demand else 0
+
     def __str__(self):
         return self.name
 
@@ -215,7 +236,11 @@ class OrderItem(models.Model):
         related_name='items',
         on_delete=models.CASCADE
     )
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product,
+        related_name='items',
+        on_delete=models.CASCADE
+    )
     quantity = models.PositiveIntegerField(
         default=1,
         validators=[MinValueValidator(1)]

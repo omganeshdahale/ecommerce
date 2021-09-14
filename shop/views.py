@@ -235,7 +235,7 @@ def stripe_webhook(request):
 @login_required
 def order_list(request):
     context = {
-        'orders': request.user.orders.exclude(placed__isnull=True)
+        'orders': request.user.orders.exclude(placed=None)
     }
     return render(request, 'shop/order_list.html', context)
 

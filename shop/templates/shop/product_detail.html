@@ -191,3 +191,8 @@
   </main>
   <!--Main layout-->
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script type="text/javascript" src="{% static 'mystatic/js/image_pagination.js' %}"></script>
+  <script type="text/javascript" src="{% static 'shop/js/rating.js' %}"></script>
+{% endblock extra_scripts %}

@@ -1,5 +1,6 @@
 {% extends "management/base.html" %}
 
+{% load static %}
 {% load crispy_forms_tags %}
 
 {% block title %}Edit {{ category }}{% endblock title %}
@@ -43,3 +44,7 @@
 
   </div>
 {% endblock content %}
+
+{% block extra_scripts %}
+  <script type="text/javascript" src="{% static 'mystatic/js/confirm_form_submit.js' %}"></script>
+{% endblock extra_scripts %}

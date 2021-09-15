@@ -45,6 +45,10 @@
           <div class="btn-group">
             <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user"></i></button>
             <div class="dropdown-menu">
+              {% if user|has_group:'admin' %}
+                <a class="dropdown-item" href="{% url 'management:order_list' %}">Admin</a>
+                <div class="dropdown-divider"></div>
+              {% endif %}
               <a class="dropdown-item" href="{% url 'account_profile' %}">Profile</a>
               <a class="dropdown-item" href="{% url 'shop:order_list' %}">Orders</a>
               <a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a>

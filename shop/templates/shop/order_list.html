@@ -29,8 +29,18 @@
                 <td>{{ order.id }}</td>
                 <td>{{ order.placed|date:"M d, Y" }}</td>
                 <td>${{ order.get_total_cost }}</td>
-                <td>{% if order.paid %}Paid{% else %}Pending{% endif %}</td>
-                <td>{{ order|order_status }}</td>
+                <td>
+                  {% if order.paid %}
+                    <span class="badge bg-success">Paid</span>
+                  {% else %}
+                    <span class="badge bg-warning">Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge bg-{{ order|order_status|order_status_colour }}">
+                    {{ order|order_status }}
+                  </span>
+                </td>
                 <td><a href="{% url 'shop:invoice' order.pk %}" class="text-primary">PDF</a></td>
               </tr>
             {% endfor %}

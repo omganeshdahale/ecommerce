@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
 from django.conf import settings
 from .models import Order
-
+from .recommender import Recommender
 
 @shared_task
 def send_invoice(order_id):
@@ -39,3 +39,9 @@ def send_invoice(order_id):
                  'application/pdf')
     # send e-mail
     email.send()
+
+@shared_task
+def update_score(order_id):
+    order = Order.objects.get(id=order_id)
+    r = Recommender()
+    r.products_bought(i.product for i in order.items.all())

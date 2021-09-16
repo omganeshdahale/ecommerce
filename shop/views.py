@@ -13,7 +13,8 @@ import stripe
 import weasyprint
 from .forms import *
 from .models import Category, Product, Order, OrderItem
-from .tasks import send_invoice
+from .recommender import Recommender
+from .tasks import send_invoice, update_score
 from .utils import get_filtered_products
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -54,6 +55,8 @@ def product_list(request):
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug)
     reviews = product.reviews.filter(active=True).exclude(comment='')
+    r = Recommender()
+    recommended_products = r.suggest_products_for([product], 4)
 
     # pagination
     paginator = Paginator(reviews, 4)
@@ -68,6 +71,7 @@ def product_detail(request, slug):
     context = {
         'product': product,
         'reviews': reviews,
+        'recommended_products': recommended_products,
         'a_form': AddToCartForm(),
         'r_form': ReviewForm(),
     }
@@ -98,15 +102,25 @@ def add_to_cart(request, pk):
 @login_required
 def cart(request):
     forms = {}
+    recommended_products = []
     try:
         order = request.user.orders.get(placed=None)
-        for i in order.items.all():
+        items = order.items.all()
+        for i in items:
             forms[i.pk] = UpdateCartForm(instance=i)
+
+        r = Recommender()
+        recommended_products = r.suggest_products_for(
+            [i.product for i in items],
+            4
+        )
+
     except Order.DoesNotExist:
         order = None
 
     context = {
         'order': order,
+        'recommended_products': recommended_products,
         'forms': forms
     }
     return render(request, 'shop/cart.html', context)
@@ -154,6 +168,7 @@ def checkout(request):
             if order_details.payment_method == 'C':
                 order.place_order()
                 send_invoice.delay(order.id)
+                update_score.delay(order.id)
             else:
                 YOUR_DOMAIN = 'http://localhost:8000'
                 line_items = []
@@ -229,6 +244,7 @@ def stripe_webhook(request):
         order.paid = timezone.now()
         order.save()
         send_invoice.delay(order.id)
+        update_score.delay(order.id)
 
     return HttpResponse(status=200)
 

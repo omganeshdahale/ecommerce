@@ -82,6 +82,25 @@
           <a href="{% url 'shop:checkout' %}" class="btn btn-primary">Place Order</a>
         {% endif %}
       </div>
+
+      {% if recommended_products %}
+        <h2 class="mb-4 mt-2">People who bought this also bought</h2>
+
+        <!--Grid row-->
+        <div class="row wow fadeIn">
+
+          {% for product in recommended_products %}
+            <!--Grid column-->
+            <div class="col-lg-3 col-md-6 mb-4">
+              {% include 'shop/product_card.html' %}
+            </div>
+            <!--Grid column-->
+          {% endfor %}
+
+        </div>
+        <!--Grid row-->
+      {% endif %}
+
     {% else %}
       <h1>Your Cart is Empty</h1>
     {% endif %}

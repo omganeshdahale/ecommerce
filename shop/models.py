@@ -142,7 +142,8 @@ class Product(models.Model):
 
     def get_demand(self):
         demand = self.items.exclude(order__placed=None).filter(
-            order__dispatched=None
+            order__dispatched=None,
+            order__rejected=None
         ).aggregate(Sum('quantity'))['quantity__sum']
 
         return demand if demand else 0

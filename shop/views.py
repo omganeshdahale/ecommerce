@@ -6,6 +6,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -78,9 +79,15 @@ def product_detail(request, slug):
     return render(request, 'shop/product_detail.html', context)
 
 @require_POST
-@login_required
 def add_to_cart(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    if not request.user.is_authenticated:
+        return redirect(
+            reverse('account_login')
+            + '?next='
+            + reverse('shop:product_detail', args=[product.slug])
+        )
+
     form = AddToCartForm(request.POST)
     if form.is_valid():
         order, c = Order.objects.get_or_create(

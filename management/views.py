@@ -98,12 +98,24 @@ def product_list(request):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
 
-    ps = Product.objects.annotate(
-        sales=Sum('items__quantity'),
-        rating=Avg('reviews__rating')
-    )
-    sales_labels = [p.name for p in ps.order_by('-sales')[:15] if p.sales]
-    sales_data = [p.sales for p in ps.order_by('-sales')[:15] if p.sales]
+    sales_labels = []
+    sales_data = []
+    for p in Product.objects.all():
+        sales = sum(
+            i.quantity for i in p.items.all() if i.order.delivered != None
+        )
+        if sales:
+            sales_labels.append(p.name)
+            sales_data.append(sales)
+
+    sales_labels = [i for _, i in sorted(
+        zip(sales_data, sales_labels),
+        reverse=True
+    )][:15]
+    sales_data.sort(reverse=True)
+    sales_data = sales_data[:15]
+
+    ps = Product.objects.annotate(rating=Avg('reviews__rating'))
     rating_labels = [p.name for p in ps.order_by('-rating')[:15] if p.rating]
     rating_data = [p.rating for p in ps.order_by('-rating')[:15] if p.rating]
 
@@ -253,6 +265,8 @@ def order_list(request):
     income = Order.objects.exclude(delivered=None).aggregate(
         Sum('items__cost')
     )['items__cost__sum']
+    if not income:
+        income = 0
     orders_pending = Order.objects.exclude(placed=None).filter(
         dispatched=None,
         rejected=None

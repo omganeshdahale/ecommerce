@@ -68,6 +68,7 @@ PAYMENT_CHOICES = (
 
 class Category(models.Model):
     name = models.CharField(max_length=200, unique=True)
+    deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('name',)
@@ -103,6 +104,7 @@ class Product(models.Model):
     label_text = models.CharField(max_length=20, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('-created',)

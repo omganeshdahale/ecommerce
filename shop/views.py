@@ -21,8 +21,10 @@ from .utils import get_filtered_products
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def home(request):
-    products = Product.objects.filter(available=True)[:8]
-    categories = Category.objects.all()
+    products = Product.objects.exclude(
+        deleted=True
+    ).filter(available=True)[:8]
+    categories = Category.objects.exclude(deleted=True)
     context = {
         'products': products,
         'categories': categories,
@@ -54,7 +56,7 @@ def product_list(request):
     return render(request, 'shop/product_list.html', context)
 
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug)
+    product = get_object_or_404(Product, slug=slug, deleted=False)
     reviews = product.reviews.filter(active=True).exclude(comment='')
     r = Recommender()
     recommended_products = r.suggest_products_for([product], 4)
@@ -80,7 +82,7 @@ def product_detail(request, slug):
 
 @require_POST
 def add_to_cart(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(Product, pk=pk, deleted=False)
     if not request.user.is_authenticated:
         return redirect(
             reverse('account_login')
@@ -135,7 +137,7 @@ def cart(request):
 @require_POST
 @login_required
 def update_cart(request, pk):
-    item = get_object_or_404(OrderItem, pk=pk)
+    item = get_object_or_404(OrderItem, pk=pk, order__placed=None)
     form = UpdateCartForm(request.POST, instance=item)
     if form.is_valid():
         form.save()
@@ -146,7 +148,7 @@ def update_cart(request, pk):
 @require_POST
 @login_required
 def remove_from_cart(request, pk):
-    item = get_object_or_404(OrderItem, pk=pk)
+    item = get_object_or_404(OrderItem, pk=pk, order__placed=None)
     item.delete()
     messages.success(request, f'Removed {item.product} from cart.')
 
@@ -288,7 +290,7 @@ def invoice(request, pk):
 @require_POST
 @login_required
 def review_create(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(Product, pk=pk, deleted=False)
     form = ReviewForm(request.POST)
     if form.is_valid():
         request.user.reviews.filter(product=product).delete()

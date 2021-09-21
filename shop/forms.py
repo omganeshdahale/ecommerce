@@ -34,7 +34,7 @@ class ProductFilterForm(forms.Form):
         required=False
     )
     category = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
+        queryset=Category.objects.exclude(deleted=True),
         empty_label='All',
         required=False,
     )

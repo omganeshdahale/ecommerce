@@ -13,9 +13,11 @@ def get_filtered_products(cd):
         cd.pop('category')
 
     if include_out_of_stock:
-        products = Product.objects.filter(**cd)
+        products = Product.objects.exclude(deleted=True).filter(**cd)
     else:
-        products = Product.objects.filter(available=True, **cd)
+        products = Product.objects.exclude(
+            deleted=True
+        ).filter(available=True, **cd)
 
     if search:
         products = products.filter(

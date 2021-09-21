@@ -202,7 +202,7 @@
                 <td>{{ item.quantity }}</td>
                 <td>${{ item.product.price }}</td>
                 <td>${{ item.get_cost }}</td>
-                <td>{{ item.product.available }}</td>
+                <td>{% if not item.product.deleted %}{{ item.product.available }}{% endif %}</td>
               </tr>
             {% endfor %}
             <thead class="thead-light">

@@ -17,6 +17,7 @@ from shop.models import (
     Product,
     ProductImage,
     Order,
+    OrderItem,
     Review,
     CITY_CHOICES
 )
@@ -30,7 +31,7 @@ User = get_user_model()
 @group_required('admin')
 def category_list(request):
     return render(request, 'management/category_list.html', {
-        'categories': Category.objects.all()
+        'categories': Category.objects.exclude(deleted=True)
     })
 
 @login_required
@@ -51,7 +52,7 @@ def category_create(request):
 @login_required
 @group_required('admin')
 def category_edit(request, pk):
-    category = get_object_or_404(Category, pk=pk)
+    category = get_object_or_404(Category, pk=pk, deleted=False)
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=category)
         if form.is_valid():
@@ -72,8 +73,19 @@ def category_edit(request, pk):
 @login_required
 @group_required('admin')
 def category_delete(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    category.delete()
+    category = get_object_or_404(Category, pk=pk, deleted=False)
+    if category.products.exclude(items__order__placed=None).exists():
+        category.deleted = True
+        category.save()
+        category.products.exclude(items__order__placed__isnull=False).delete()
+        category.products.update(deleted=True)
+        OrderItem.objects.filter(
+            product__category=category,
+            order__placed=None
+        ).delete()
+    else:
+        category.delete()
+
     messages.success(request, 'Category deleted successfully.')
 
     return redirect('management:category_list')
@@ -83,11 +95,11 @@ def category_delete(request, pk):
 def product_list(request):
     search = request.GET.get('search', None)
     if search:
-        products = Product.objects.filter(
+        products = Product.objects.exclude(deleted=True).filter(
             Q(name__icontains=search) | Q(description__icontains=search)
         )
     else:
-        products = Product.objects.all()
+        products = Product.objects.exclude(deleted=True)
 
     paginator = Paginator(products, 15)
     page = request.GET.get('page')
@@ -100,7 +112,7 @@ def product_list(request):
 
     sales_labels = []
     sales_data = []
-    for p in Product.objects.all():
+    for p in Product.objects.exclude(deleted=True):
         sales = sum(
             i.quantity for i in p.items.all() if i.order.delivered != None
         )
@@ -115,7 +127,9 @@ def product_list(request):
     sales_data.sort(reverse=True)
     sales_data = sales_data[:15]
 
-    ps = Product.objects.annotate(rating=Avg('reviews__rating'))
+    ps = Product.objects.exclude(deleted=True).annotate(
+        rating=Avg('reviews__rating')
+    )
     rating_labels = [p.name for p in ps.order_by('-rating')[:15] if p.rating]
     rating_data = [p.rating for p in ps.order_by('-rating')[:15] if p.rating]
 
@@ -166,7 +180,7 @@ def product_create(request):
 @login_required
 @group_required('admin')
 def product_edit(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(Product, pk=pk, deleted=False)
     ProductImageFormSet = inlineformset_factory(
         Product,
         ProductImage,
@@ -197,8 +211,14 @@ def product_edit(request, pk):
 @login_required
 @group_required('admin')
 def product_delete(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    product.delete()
+    product = get_object_or_404(Product, pk=pk, deleted=False)
+    if product.items.exclude(order__placed=None).exists():
+        product.deleted = True
+        product.save()
+        product.items.filter(order__placed=None).delete()
+    else:
+        product.delete()
+
     messages.success(request, 'Product deleted successfully.')
 
     return redirect('management:product_list')
@@ -369,7 +389,7 @@ def order_deliver(request, pk):
 def review_list(request):
     search = request.GET.get('search', None)
     if search:
-        reviews = Review.objects.annotate(
+        reviews = Review.objects.exclude(product__deleted=True).annotate(
             full_name=Concat('user__first_name', V(' '), 'user__last_name')
         ).filter(
             Q(user__username__icontains=search)
@@ -378,7 +398,7 @@ def review_list(request):
             | Q(product__name__icontains=search)
         )
     else:
-        reviews = Review.objects.all()
+        reviews = Review.objects.exclude(product__deleted=True)
 
     paginator = Paginator(reviews, 15)
     page = request.GET.get('page')
@@ -397,7 +417,7 @@ def review_list(request):
 @login_required
 @group_required('admin')
 def review_active_toggle(request, pk):
-    review = get_object_or_404(Review, pk=pk)
+    review = get_object_or_404(Review, pk=pk, product__deleted=False)
     if review.active:
         review.active = False
         messages.success(request, f'Review deactivated')

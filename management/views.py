@@ -6,7 +6,6 @@ from django.core.mail import send_mail
 from django.db.models import Avg, Q, Sum, Value as V
 from django.db.models.functions import Concat
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.forms import modelformset_factory, inlineformset_factory
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -145,14 +144,9 @@ def product_list(request):
 @login_required
 @group_required('admin')
 def product_create(request):
-    ProductImageFormSet = modelformset_factory(
-        ProductImage,
-        form=ProductImageForm,
-        extra=3
-    )
     if request.method == 'POST':
         form = ProductForm(request.POST)
-        formset = ProductImageFormSet(
+        formset = ProductImageModelFormSet(
             request.POST,
             request.FILES,
             queryset=ProductImage.objects.none()
@@ -169,7 +163,9 @@ def product_create(request):
             return redirect('management:product_list')
     else:
         form = ProductForm()
-        formset = ProductImageFormSet(queryset=ProductImage.objects.none())
+        formset = ProductImageModelFormSet(
+            queryset=ProductImage.objects.none()
+        )
 
     context = {
         'form': form,
@@ -181,15 +177,13 @@ def product_create(request):
 @group_required('admin')
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk, deleted=False)
-    ProductImageFormSet = inlineformset_factory(
-        Product,
-        ProductImage,
-        form=ProductImageForm,
-        extra=1
-    )
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
-        formset = ProductImageFormSet(request.POST, request.FILES, instance=product)
+        formset = ProductImageInlineFormSet(
+            request.POST,
+            request.FILES,
+            instance=product
+        )
         if form.is_valid() and formset.is_valid():
             form.save()
             formset.save()
@@ -198,7 +192,7 @@ def product_edit(request, pk):
             return redirect('management:product_edit', pk=pk)
     else:
         form = ProductForm(instance=product)
-        formset = ProductImageFormSet(instance=product)
+        formset = ProductImageInlineFormSet(instance=product)
 
     context = {
         'product': product,
